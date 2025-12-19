@@ -86,17 +86,28 @@ class Offline(Client):
         Process a single request.
         """
 
-        # Create fresh SamplingParams to avoid vLLM overflow bug when reusing
-        sampling_params = SamplingParams(max_tokens=self.sampling_params.max_tokens)
+        # Extract params from kwargs - must pass to constructor, not mutate after,
+        # because SamplingParams.__post_init__ sets skip_reading_prefix_cache based
+        # on prompt_logprobs, and mutation after construction skips this.
+        logprobs = None
+        prompt_logprobs = None
+        max_tokens = self.sampling_params.max_tokens
+        temperature = 1.0
         for kwarg in kwargs:
             if "logprobs" in kwarg:
-                sampling_params.logprobs = kwarg["top_logprobs"]
+                logprobs = kwarg["top_logprobs"]
             if "prompt_logprobs" in kwarg:
-                sampling_params.prompt_logprobs = kwarg["prompt_logprobs"]
+                prompt_logprobs = kwarg["prompt_logprobs"]
             if "max_tokens" in kwarg:
-                sampling_params.max_tokens = kwarg["max_tokens"]
+                max_tokens = kwarg["max_tokens"]
             if "temperature" in kwarg:
-                sampling_params.temperature = kwarg["temperature"]
+                temperature = kwarg["temperature"]
+        sampling_params = SamplingParams(
+            max_tokens=max_tokens,
+            logprobs=logprobs,
+            prompt_logprobs=prompt_logprobs,
+            temperature=temperature,
+        )
         loop = asyncio.get_running_loop()
         prompts = []
         statistics = []
