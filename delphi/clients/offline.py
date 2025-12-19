@@ -86,16 +86,17 @@ class Offline(Client):
         Process a single request.
         """
 
-        # This is actually stupid
+        # Create fresh SamplingParams to avoid vLLM overflow bug when reusing
+        sampling_params = SamplingParams(max_tokens=self.sampling_params.max_tokens)
         for kwarg in kwargs:
             if "logprobs" in kwarg:
-                self.sampling_params.logprobs = kwarg["top_logprobs"]
+                sampling_params.logprobs = kwarg["top_logprobs"]
             if "prompt_logprobs" in kwarg:
-                self.sampling_params.prompt_logprobs = kwarg["prompt_logprobs"]
+                sampling_params.prompt_logprobs = kwarg["prompt_logprobs"]
             if "max_tokens" in kwarg:
-                self.sampling_params.max_tokens = kwarg["max_tokens"]
+                sampling_params.max_tokens = kwarg["max_tokens"]
             if "temperature" in kwarg:
-                self.sampling_params.temperature = kwarg["temperature"]
+                sampling_params.temperature = kwarg["temperature"]
         loop = asyncio.get_running_loop()
         prompts = []
         statistics = []
@@ -124,7 +125,7 @@ class Offline(Client):
             partial(
                 self.client.generate,  # type: ignore
                 prompts,
-                sampling_params=self.sampling_params,
+                sampling_params=sampling_params,  # Use fresh params, not self.sampling_params
                 use_tqdm=False,
             ),
         )
