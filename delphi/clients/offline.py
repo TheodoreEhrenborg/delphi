@@ -87,8 +87,8 @@ class Offline(Client):
         """
 
         # Extract params from kwargs - must pass to constructor, not mutate after,
-        # because SamplingParams.__post_init__ sets skip_reading_prefix_cache based
-        # on prompt_logprobs, and mutation after construction skips this.
+        # because SamplingParams.__post_init__ likely does some extra setup,
+        # and mutation after construction skips this.
         logprobs = None
         prompt_logprobs = None
         max_tokens = self.sampling_params.max_tokens
