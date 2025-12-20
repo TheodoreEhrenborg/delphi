@@ -136,7 +136,7 @@ class Offline(Client):
             partial(
                 self.client.generate,  # type: ignore
                 prompts,
-                sampling_params=sampling_params,  # Use fresh params, not self.sampling_params
+                sampling_params=sampling_params,  # Use fresh sampling_params
                 use_tqdm=False,
             ),
         )
